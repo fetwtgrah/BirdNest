@@ -9,8 +9,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// 用户系统：
-// register,login
 func main() {
 	config.InitDb()
 	config.InitRedis()
@@ -19,7 +17,16 @@ func main() {
 		fmt.Println("数据库连接错误" + err.Error())
 	}
 	r := gin.Default()
-	r.POST("/user", controller.Register)
+	v1 := r.Group("/api/v1")
+
+	v1.POST("/code", controller.SendCode)
+	{
+		user := v1.Group("/user")
+		{
+			user.POST("", controller.RegisterByCode)
+		}
+	}
+
 	if err := r.Run(":8080"); err != nil {
 		panic("路由连接出错" + err.Error())
 	}

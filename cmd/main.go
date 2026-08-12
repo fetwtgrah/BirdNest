@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github/fetwtgrah/BirdNest/config"
+	"github/fetwtgrah/BirdNest/configs"
 	"github/fetwtgrah/BirdNest/controller"
 	"github/fetwtgrah/BirdNest/model"
 
@@ -10,9 +10,12 @@ import (
 )
 
 func main() {
-	config.InitDb()
-	config.InitRedis()
-	err := config.Db.AutoMigrate(&model.User{})
+	if err := configs.InitConfig(); err != nil {
+		panic("系统配置出错" + err.Error())
+	}
+	configs.InitDb()
+	configs.InitRedis()
+	err := configs.Db.AutoMigrate(&model.User{})
 	if err != nil {
 		fmt.Println("数据库连接错误" + err.Error())
 	}

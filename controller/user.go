@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github/fetwtgrah/BirdNest/config"
+	"github/fetwtgrah/BirdNest/configs"
 	"github/fetwtgrah/BirdNest/model"
 	"github/fetwtgrah/BirdNest/utils"
 	"net/http"
@@ -13,6 +13,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-gomail/gomail"
 	"github.com/redis/go-redis/v9"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type userController struct {
@@ -34,7 +35,7 @@ func SendCode(c *gin.Context) {
 
 	//redis存储验证码
 	key := fmt.Sprintf("user:email:%s", user.Email)
-	if err := config.Rc.Set(context.Background(), key, code, 5*time.Minute).Err(); err != nil {
+	if err := configs.Rc.Set(context.Background(), key, code, 5*time.Minute).Err(); err != nil {
 		c.JSON(400, gin.H{"msg": "邮箱储存出错"})
 		return
 	}
@@ -43,9 +44,13 @@ func SendCode(c *gin.Context) {
 	m.SetHeader("To", user.Email)
 	m.SetHeader("Subject", "this is a test email form Fresh...")
 	m.SetBody("text/html", fmt.Sprintf(utils.EmailContext(), user.Name, code))
-	d := gomail.NewDialer("smtp.qq.com", 465, "2037461470@qq.com", "nqomcrltlwaudfdf")
+	d := gomail.NewDialer(
+		configs.Conf.Email.Smtp_host,
+		configs.Conf.Email.Smtp_port,
+		configs.Conf.Email.Smtp_user,
+		configs.Conf.Email.Smtp_password)
 	if err := d.DialAndSend(m); err != nil {
-		config.Rc.Del(context.Background(), key)
+		configs.Rc.Del(context.Background(), key)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "邮件发送失败，请稍后重试"})
 		return
 	}
@@ -60,7 +65,7 @@ func RegisterByCode(c *gin.Context) {
 		return
 	}
 	key := fmt.Sprintf("user:email:%s", user.Email)
-	RC_code, err := config.Rc.Get(context.Background(), key).Result()
+	RC_code, err := configs.Rc.Get(context.Background(), key).Result()
 	if errors.Is(err, redis.Nil) {
 		c.JSON(400, gin.H{"msg": "验证码已过期，请重新获取"})
 		return
@@ -72,8 +77,13 @@ func RegisterByCode(c *gin.Context) {
 		c.JSON(400, gin.H{"msg": "验证码错误！"})
 		return
 	}
-	config.Rc.Del(context.Background(), key)
-	err = config.Db.Create(&model.User{Name: user.Name, Email: user.Email, Password: user.Password}).Error
+	configs.Rc.Del(context.Background(), key)
+	password, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if err != nil {
+		c.JSON(400, gin.H{"msg": "系统出错"})
+		return
+	}
+	err = configs.Db.Create(&model.User{Name: user.Name, Email: user.Email, Password: string(password)}).Error
 	if err != nil {
 		c.JSON(400, gin.H{"msg": "用户创建失败，请稍后重试"})
 		return

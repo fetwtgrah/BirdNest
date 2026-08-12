@@ -1,0 +1,19 @@
+server:
+  port: 8080
+  mode: debug
+database:
+  host: localhost
+  port: 5432
+  user: postgres
+  password: 123456 #注意密码安全，这里做测试用，忽略
+  dbname: postgres
+  sslmode: disable
+redis:
+  addr: localhost:6379
+  password: ""
+  db: 0
+email:
+  smtp_host: smtp.qq.com
+  smtp_port: 465
+  smtp_user: 2037461470@qq.com
+  smtp_password: nqomcrltlwaudfdf

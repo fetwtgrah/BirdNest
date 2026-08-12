@@ -1,4 +1,4 @@
-package config
+package configs
 
 import (
 	"context"
@@ -11,8 +11,8 @@ var Rc *redis.Client
 
 func InitRedis() {
 	Rc = redis.NewClient(&redis.Options{
-		Addr: "localhost:6379",
-		DB:   0,
+		Addr: Conf.Redis.Addr,
+		DB:   Conf.Redis.Db,
 	})
 	_, err := Rc.Ping(context.Background()).Result()
 	if err != nil {

@@ -1,39 +1,108 @@
-# BirdNest
+# BirdNest 🐦
 
-#### 介绍
-{**以下是 Gitee 平台说明，您可以替换此简介**
-Gitee 是 OSCHINA 推出的基于 Git 的代码托管平台（同时支持 SVN）。专为开发者提供稳定、高效、安全的云端软件开发协作平台
-无论是个人、团队、或是企业，都能够用 Gitee 实现代码托管、项目管理、协作开发。企业项目请看 [https://gitee.com/enterprises](https://gitee.com/enterprises)}
+一个基于 Go + Gin 构建的论坛系统,从用户认证系统起步,逐步演进为完整的社区平台。
 
-#### 软件架构
-软件架构说明
+## 项目简介
 
+BirdNest 是个人练习项目,目标是通过循序渐进的方式,掌握 Go Web 后端开发的核心技术栈——从基础的用户认证,到论坛核心业务,再到部署运维与 AI 能力集成。
 
-#### 安装教程
+## 技术栈
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+- **语言**: Go
+- **Web 框架**: Gin
+- **ORM**: GORM
+- **数据库**: PostgreSQL
+- **缓存**: Redis
+- **配置管理**: Viper
+- **认证**: JWT
+- **密码加密**: bcrypt
+- **邮件服务**: gomail (基于 QQ 邮箱 SMTP)
 
-#### 使用说明
+## 已实现功能
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+### 用户系统
 
-#### 参与贡献
+- [x] 邮箱验证码注册
+    - 验证码生成、Redis 存储(5 分钟有效期)
+    - HTML 邮件模板,验证码通过邮件发送
+    - 验证码校验与用户创建
+- [x] 密码 bcrypt 加密存储
+- [x] JWT 鉴权中间件
+- [x] 配置文件管理(基于 Viper,支持 YAML 配置)
 
-1.  Fork 本仓库
-2.  新建 Feat_xxx 分支
-3.  提交代码
-4.  新建 Pull Request
+### 工程规范
 
+- [x] 分层架构:`controller` / `model` / `config` / `utils`
+- [x] 敏感配置(数据库密码、邮箱授权码等)通过 `config.yaml` 管理,已加入 `.gitignore`
+- [x] Git 提交遵循 Angular Commit 规范
 
-#### 特技
+## 项目结构
 
-1.  使用 Readme\_XXX.md 来支持不同的语言，例如 Readme\_en.md, Readme\_zh.md
-2.  Gitee 官方博客 [blog.gitee.com](https://blog.gitee.com)
-3.  你可以 [https://gitee.com/explore](https://gitee.com/explore) 这个地址来了解 Gitee 上的优秀开源项目
-4.  [GVP](https://gitee.com/gvp) 全称是 Gitee 最有价值开源项目，是综合评定出的优秀开源项目
-5.  Gitee 官方提供的使用手册 [https://gitee.com/help](https://gitee.com/help)
-6.  Gitee 封面人物是一档用来展示 Gitee 会员风采的栏目 [https://gitee.com/gitee-stars/](https://gitee.com/gitee-stars/)
+```
+bird-nest/
+├── cmd/
+│   └── main.go          # 程序入口
+├── config/               # 配置加载 + 基础设施初始化(DB、Redis)
+│   ├── config.go
+│   ├── struct.go
+│   ├── pgsql.go
+│   ├── redis.go
+│   └── config.yaml       # 本地配置(不提交,需自行创建)
+├── controller/            # 路由处理层
+│   └── user.go
+├── model/                 # 数据模型
+│   └── user.go
+├── utils/                 # 工具函数
+│   ├── email.go           # 邮件模板
+│   └── random.go          # 验证码生成
+└── .gitignore
+```
+
+## 快速开始
+
+### 1. 准备依赖服务
+
+确保本地已启动 PostgreSQL 和 Redis。
+
+### 2. 配置
+
+复制配置模板并填入自己的参数:
+
+```bash
+cp config/config.example.yaml config/config.yaml
+```
+
+编辑 `config/config.yaml`,填入数据库连接信息、Redis 地址、邮箱 SMTP 授权码等。
+
+> ⚠️ 邮箱密码请使用 SMTP **授权码**,而非邮箱登录密码。以 QQ 邮箱为例,需在邮箱设置中开启 SMTP 服务后生成授权码。
+
+### 3. 运行
+
+```bash
+go mod tidy
+go run cmd/main.go
+```
+
+服务默认启动在 `:8080`。
+
+## API 一览
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| POST | `/api/v1/verification-codes` | 发送邮箱验证码 |
+| POST | `/api/v1/users` | 使用验证码完成注册 |
+
+## Roadmap
+
+- [ ] Nginx 反向代理 & Docker 容器化部署
+- [ ] 论坛核心功能:发帖 / 点赞 / 关注 / 节点分类
+- [ ] 单元测试覆盖关键逻辑
+- [ ] 全文搜索(meilisearch)
+- [ ] 异步邮件订阅推送
+- [ ] Kubernetes 集群部署
+- [ ] 基于爬虫数据的 RAG 问答 Bot
+- [ ] 具备工具调用能力的 AI Agent(MCP)
+
+## License
+
+见 [LICENSE](./LICENSE)

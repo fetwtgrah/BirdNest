@@ -90,3 +90,36 @@ func RegisterByCode(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"msg": "用户创建成功"})
 }
+
+func LoginByPassword(c *gin.Context) {
+	var user model.User
+	if err := c.ShouldBindJSON(&user); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
+		return
+	}
+	var RcUser model.User
+	err := configs.Db.Where("email = ?", user.Email).First(&RcUser).Error
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
+		return
+	}
+	//检查密码
+	if user.Password != RcUser.Password {
+		c.JSON(400, gin.H{
+			"msg": "密码错误，请重新输入...",
+		})
+		return
+	}
+	//签发token
+	token, _ := utils.GenerateToken(user)
+	key := fmt.Sprintf("user:name:%s", user.Name)
+	err = configs.Rc.Set(context.Background(), key, token, 1*time.Hour).Err()
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "token签发失败"})
+		return
+	}
+	c.JSON(200, gin.H{
+		"token": token,
+		"msg":   "成功登录！",
+	})
+}

@@ -92,16 +92,7 @@ go run cmd/main.go
 | POST | `/api/v1/verification-codes` | 发送邮箱验证码 |
 | POST | `/api/v1/users` | 使用验证码完成注册 |
 
-## Roadmap
 
-- [ ] Nginx 反向代理 & Docker 容器化部署
-- [ ] 论坛核心功能:发帖 / 点赞 / 关注 / 节点分类
-- [ ] 单元测试覆盖关键逻辑
-- [ ] 全文搜索(meilisearch)
-- [ ] 异步邮件订阅推送
-- [ ] Kubernetes 集群部署
-- [ ] 基于爬虫数据的 RAG 问答 Bot
-- [ ] 具备工具调用能力的 AI Agent(MCP)
 
 ## License
 

@@ -33,9 +33,9 @@ func main() {
 	passage := v1.Group("/passage")
 	passage.Use(midware.CheckToken)
 	{
-		passage.POST("", controller.AddPost)
+		passage.POST("", controller.AddPassage)
 	}
-	
+
 	if err := r.Run(":8080"); err != nil {
 		panic("路由连接出错" + err.Error())
 	}

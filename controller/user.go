@@ -111,8 +111,8 @@ func LoginByPassword(c *gin.Context) {
 		return
 	}
 	//签发token
-	token, _ := utils.GenerateToken(user)
-	key := fmt.Sprintf("user:name:%s", user.Name)
+	token, _ := utils.GenerateToken(RcUser)
+	key := fmt.Sprintf("user:name:%s", RcUser.Name) // 这里也建议统一用 RcUser
 	err = configs.Rc.Set(context.Background(), key, token, 1*time.Hour).Err()
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"msg": "token签发失败"})

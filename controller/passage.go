@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"github/fetwtgrah/BirdNest/configs"
 	"github/fetwtgrah/BirdNest/model"
 	"net/http"
@@ -35,7 +36,6 @@ func AddPassage(c *gin.Context) {
 	if err := configs.Db.Create(&passage).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"msg":     "上传失败",
-			"err":     err.Error(),
 			"当前请求的id": passage.UserID,
 		})
 		return
@@ -43,5 +43,107 @@ func AddPassage(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"msg":    "上传成功",
 		"author": user_name,
+	})
+}
+
+func GetPassage(c *gin.Context) {
+	id := c.Param("id")
+	var passage model.Passage
+	if err := configs.Db.First(&passage, id).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"msg": "不存在该文章或文章id错误",
+		})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"msg":  "文章获取成功",
+		"data": passage,
+	})
+}
+
+func GetAllPassage(c *gin.Context) {
+	var passages []model.Passage
+	user_id, ok := c.Get("user_id")
+	user_name, _ := c.Get("user_name")
+	if !ok {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"msg": "用户id获取出错",
+		})
+		return
+	}
+	err := configs.Db.Where("user_id = ?", user_id.(int64)).Find(&passages).Error
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"msg": err.Error(),
+		})
+		return
+	}
+	success := fmt.Sprintf("成功获取用户：%v的全部文章", user_name)
+	c.JSON(http.StatusOK, gin.H{
+		"msg":  success,
+		"data": passages,
+	})
+}
+
+func UpdatePassage(c *gin.Context) {
+	id := c.Param("id")
+	user_id, _ := c.Get("user_id")
+	var passage model.Passage
+	if err := configs.Db.First(&passage, id).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"msg": "文章不存在",
+		})
+		return
+	}
+	if passage.UserID != user_id.(int64) {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"msg": "无权限修改别人的文章",
+		})
+		return
+	}
+	var req AddPassageRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"msg": err.Error(),
+		})
+		return
+	}
+	passage.Content = req.Content
+	if err := configs.Db.Save(&passage).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"msg": "更新失败",
+		})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"msg":  "更新成功",
+		"data": passage,
+	})
+}
+
+func DeletePassage(c *gin.Context) {
+	id := c.Param("id")
+	user_id, _ := c.Get("user_id")
+	var passage model.Passage
+	if err := configs.Db.First(&passage, id).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"msg": "文章不存在",
+		})
+		return
+	}
+	if passage.UserID != user_id.(int64) {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"msg": "无权限修改别人的文章",
+		})
+		return
+	}
+	if err := configs.Db.Delete(&passage).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"msg": "删除失败",
+		})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"msg": "删除成功",
 	})
 }

@@ -34,6 +34,10 @@ func main() {
 	passage.Use(midware.CheckToken)
 	{
 		passage.POST("", controller.AddPassage)
+		passage.GET("/:id", controller.GetPassage)
+		passage.GET("/all", controller.GetAllPassage)
+		passage.PUT("/:id", controller.UpdatePassage)
+		passage.DELETE("/:id", controller.DeletePassage)
 	}
 
 	if err := r.Run(":8080"); err != nil {

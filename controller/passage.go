@@ -15,13 +15,21 @@ type AddPassageRequest struct {
 
 func AddPassage(c *gin.Context) {
 	user_id, ok := c.Get("user_id")
-	user_name, _ := c.Get("user_name")
 	if !ok {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"msg": "未登录",
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"message": "unauthorized",
 		})
 		return
 	}
+	var user model.User
+	if err := configs.Db.First(&user, user_id).Error; err != nil {
+		c.JSON(400, gin.H{
+			"msg": "该用户不存在",
+		})
+		return
+	}
+	user_name, _ := c.Get("user_name")
+
 	var req AddPassageRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -29,14 +37,10 @@ func AddPassage(c *gin.Context) {
 		})
 		return
 	}
-	passage := model.Passage{
-		UserID:  user_id.(int64),
-		Content: req.Content,
-	}
-	if err := configs.Db.Create(&passage).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"msg":     "上传失败",
-			"当前请求的id": passage.UserID,
+	err := configs.Db.Model(&user).Association("Passages").Append(model.Passage{Content: req.Content})
+	if err != nil {
+		c.JSON(400, gin.H{
+			"msg": "上传失败",
 		})
 		return
 	}
@@ -63,6 +67,7 @@ func GetPassage(c *gin.Context) {
 
 func GetAllPassage(c *gin.Context) {
 	var passages []model.Passage
+	var user model.User
 	user_id, ok := c.Get("user_id")
 	user_name, _ := c.Get("user_name")
 	if !ok {
@@ -71,14 +76,16 @@ func GetAllPassage(c *gin.Context) {
 		})
 		return
 	}
-	err := configs.Db.Where("user_id = ?", user_id.(int64)).Find(&passages).Error
+	configs.Db.First(&user, user_id.(uint))
+	count := configs.Db.Model(&user).Association("Passages").Count()
+	err := configs.Db.Model(&user).Association("Passages").Find(&passages)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"msg": err.Error(),
 		})
 		return
 	}
-	success := fmt.Sprintf("成功获取用户：%v的全部文章", user_name)
+	success := fmt.Sprintf("成功获取用户：%v的全部文章,一共%v篇", user_name, count)
 	c.JSON(http.StatusOK, gin.H{
 		"msg":  success,
 		"data": passages,
@@ -87,7 +94,13 @@ func GetAllPassage(c *gin.Context) {
 
 func UpdatePassage(c *gin.Context) {
 	id := c.Param("id")
-	user_id, _ := c.Get("user_id")
+	user_id, ok := c.Get("user_id")
+	if !ok {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"msg": "用户的id获取失败",
+		})
+		return
+	}
 	var passage model.Passage
 	if err := configs.Db.First(&passage, id).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -95,7 +108,7 @@ func UpdatePassage(c *gin.Context) {
 		})
 		return
 	}
-	if passage.UserID != user_id.(int64) {
+	if passage.UserID != user_id {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"msg": "无权限修改别人的文章",
 		})
@@ -131,7 +144,7 @@ func DeletePassage(c *gin.Context) {
 		})
 		return
 	}
-	if passage.UserID != user_id.(int64) {
+	if passage.UserID != user_id {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"msg": "无权限修改别人的文章",
 		})

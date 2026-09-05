@@ -1,10 +1,9 @@
 package model
 
+import "gorm.io/gorm"
+
 type Passage struct {
-	ID      int64  `gorm:"primaryKey" json:"id"`
-	UserID  int64  `json:"user_id"`
+	gorm.Model
+	UserID  uint
 	Content string `json:"content"`
-	//CreatedAt time.Time `json:"created_at"`
-	//UpdatedAt time.Time `json:"updated_at"`
-	User User `gorm:"foreignKey:UserID" json:"-"`
 }

@@ -35,7 +35,7 @@ func CheckToken(c *gin.Context) {
 		c.Abort()
 		return
 	}
-	c.Set("user_id", int64(userIDFloat))
+	c.Set("user_id", uint(userIDFloat))
 	c.Set("user_name", claim["username"])
 	c.Next()
 }

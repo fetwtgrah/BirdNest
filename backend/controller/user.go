@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github/fetwtgrah/BirdNest/configs"
-	"github/fetwtgrah/BirdNest/model"
-	"github/fetwtgrah/BirdNest/utils"
+	"github/fetwtgrah/BirdNest/backend/configs"
+	"github/fetwtgrah/BirdNest/backend/model"
+	"github/fetwtgrah/BirdNest/backend/utils"
 	"net/http"
 	"time"
 
@@ -17,12 +17,14 @@ import (
 )
 
 type userController struct {
-	Name  string `json:"name" binding:"required"`
+	Name  string `json:"name"`
 	Email string `json:"email" binding:"required"`
 }
 type UserRegister struct {
-	*model.User
-	Code string `json:"code" binding:"required"`
+	Name     string `json:"name" binding:"required"`
+	Email    string `json:"email" binding:"required"`
+	Password string `json:"password" binding:"required"`
+	Code     string `json:"code" binding:"required"`
 }
 
 func SendCode(c *gin.Context) {
@@ -97,22 +99,22 @@ func LoginByPassword(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
 		return
 	}
-	var RcUser model.User
-	err := configs.Db.Where("email = ?", user.Email).First(&RcUser).Error
+	var DbUser model.User
+	err := configs.Db.Where("email = ?", user.Email).First(&DbUser).Error
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
 		return
 	}
 	//检查密码
-	if user.Password != RcUser.Password {
+	if err := bcrypt.CompareHashAndPassword([]byte(DbUser.Password), []byte(user.Password)); err != nil {
 		c.JSON(400, gin.H{
 			"msg": "密码错误，请重新输入...",
 		})
 		return
 	}
 	//签发token
-	token, _ := utils.GenerateToken(RcUser)
-	key := fmt.Sprintf("user:name:%s", RcUser.Name) // 这里也建议统一用 RcUser
+	token, _ := utils.GenerateToken(DbUser)
+	key := fmt.Sprintf("user:name:%s", DbUser.Name) // 这里也建议统一用 RcUser
 	err = configs.Rc.Set(context.Background(), key, token, 1*time.Hour).Err()
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"msg": "token签发失败"})

@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github/fetwtgrah/BirdNest/configs"
-	"github/fetwtgrah/BirdNest/controller"
-	"github/fetwtgrah/BirdNest/midware"
-	"github/fetwtgrah/BirdNest/model"
+	"github/fetwtgrah/BirdNest/backend/configs"
+	"github/fetwtgrah/BirdNest/backend/controller"
+	"github/fetwtgrah/BirdNest/backend/midware"
+	"github/fetwtgrah/BirdNest/backend/model"
 
 	"github.com/gin-gonic/gin"
 )
@@ -16,7 +16,7 @@ func main() {
 	}
 	configs.InitDb()
 	configs.InitRedis()
-	err := configs.Db.AutoMigrate(&model.User{}, &model.Passage{})
+	err := configs.Db.AutoMigrate(&model.User{}, &model.Passage{}, &model.Tag{})
 	if err != nil {
 		fmt.Println("数据库连接错误" + err.Error())
 	}
@@ -38,6 +38,8 @@ func main() {
 		passage.GET("/all", controller.GetAllPassage)
 		passage.PUT("/:id", controller.UpdatePassage)
 		passage.DELETE("/:id", controller.DeletePassage)
+
+		passage.GET("/tag/:tag", controller.GetPassageByTag)
 	}
 
 	if err := r.Run(":8080"); err != nil {

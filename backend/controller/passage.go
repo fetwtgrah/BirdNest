@@ -2,15 +2,16 @@ package controller
 
 import (
 	"fmt"
-	"github/fetwtgrah/BirdNest/configs"
-	"github/fetwtgrah/BirdNest/model"
+	"github/fetwtgrah/BirdNest/backend/configs"
+	"github/fetwtgrah/BirdNest/backend/model"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
 type AddPassageRequest struct {
-	Content string `json:"content" binding:"required"`
+	Tags    []model.Tag `json:"tags"`
+	Content string      `json:"content" binding:"required"`
 }
 
 func AddPassage(c *gin.Context) {
@@ -37,7 +38,13 @@ func AddPassage(c *gin.Context) {
 		})
 		return
 	}
-	err := configs.Db.Model(&user).Association("Passages").Append(model.Passage{Content: req.Content})
+	//err := configs.Db.Model(&user).Association("Passages").Append(model.Passage{Tags: req.Tags, Content: req.Content})
+	passage := model.Passage{
+		UserID:  user_id.(uint),
+		Content: req.Content,
+		Tags:    req.Tags,
+	}
+	err := configs.Db.Create(&passage).Error
 	if err != nil {
 		c.JSON(400, gin.H{
 			"msg": "上传失败",
@@ -47,6 +54,7 @@ func AddPassage(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"msg":    "上传成功",
 		"author": user_name,
+		"tags":   req.Tags,
 	})
 }
 
@@ -158,5 +166,28 @@ func DeletePassage(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"msg": "删除成功",
+	})
+}
+
+func GetPassageByTag(c *gin.Context) {
+	tagName := c.Param("tag")
+	var tag model.Tag
+	if err := configs.Db.Where("tag_name=?", tagName).First(&tag).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"msg": "标签不存在",
+		})
+		return
+	}
+	var passages []model.Passage
+	if err := configs.Db.Model(&tag).Association("Passages").Find(&passages); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"msg": err.Error(),
+		})
+		return
+	}
+	res := fmt.Sprintf("%v的文章一共有%v篇", tagName, len(passages))
+	c.JSON(http.StatusOK, gin.H{
+		"msg":  res,
+		"data": passages,
 	})
 }

@@ -42,7 +42,7 @@ func SendCode(c *gin.Context) {
 		return
 	}
 	m := gomail.NewMessage()
-	m.SetHeader("From", "2037461470@qq.com")
+	m.SetHeader("From", "Fresh")
 	m.SetHeader("To", user.Email)
 	m.SetHeader("Subject", "this is a test email form Fresh...")
 	m.SetBody("text/html", fmt.Sprintf(utils.EmailContext(), user.Name, code))

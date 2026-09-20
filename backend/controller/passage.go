@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type AddPassageRequest struct {
@@ -75,7 +76,6 @@ func GetPassage(c *gin.Context) {
 
 func GetAllPassage(c *gin.Context) {
 	var passages []model.Passage
-	var user model.User
 	user_id, ok := c.Get("user_id")
 	user_name, _ := c.Get("user_name")
 	if !ok {
@@ -84,16 +84,15 @@ func GetAllPassage(c *gin.Context) {
 		})
 		return
 	}
-	configs.Db.First(&user, user_id.(uint))
-	count := configs.Db.Model(&user).Association("Passages").Count()
-	err := configs.Db.Model(&user).Association("Passages").Find(&passages)
+	userID := user_id.(uint)
+	err := configs.Db.Preload("Tags").Where("user_id = ?", userID).Find(&passages).Error
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"msg": err.Error(),
 		})
 		return
 	}
-	success := fmt.Sprintf("成功获取用户：%v的全部文章,一共%v篇", user_name, count)
+	success := fmt.Sprintf("成功获取用户：%v的全部文章,一共%v篇", user_name, len(passages))
 	c.JSON(http.StatusOK, gin.H{
 		"msg":  success,
 		"data": passages,
@@ -116,7 +115,7 @@ func UpdatePassage(c *gin.Context) {
 		})
 		return
 	}
-	if passage.UserID != user_id {
+	if passage.UserID != user_id.(uint) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"msg": "无权限修改别人的文章",
 		})
@@ -130,7 +129,8 @@ func UpdatePassage(c *gin.Context) {
 		return
 	}
 	passage.Content = req.Content
-	if err := configs.Db.Save(&passage).Error; err != nil {
+	passage.Tags = req.Tags
+	if err := configs.Db.Session(&gorm.Session{FullSaveAssociations: true}).Save(&passage).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"msg": "更新失败",
 		})
@@ -152,7 +152,7 @@ func DeletePassage(c *gin.Context) {
 		})
 		return
 	}
-	if passage.UserID != user_id {
+	if passage.UserID != user_id.(uint) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"msg": "无权限修改别人的文章",
 		})

@@ -21,6 +21,22 @@ interface PublishResponse extends MessageResponse {
   tags: Array<{ tagName: string }>
 }
 
+export interface Passage {
+  ID: number
+  content: string
+  tags?: Array<{ tagName: string }>
+  CreatedAt?: string
+  UpdatedAt?: string
+}
+
+interface PassageListResponse extends MessageResponse {
+  data: Passage[]
+}
+
+interface PassageResponse extends MessageResponse {
+  data: Passage
+}
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
@@ -77,6 +93,36 @@ export const api = {
         content,
         tags: tags.map((tagName) => ({ tagName })),
       }),
+    })
+  },
+
+  getAllPassages() {
+    return request<PassageListResponse>('/api/v1/passage/all', {
+      headers: {
+        token: auth.token() ?? '',
+      },
+    })
+  },
+
+  updatePassage(id: number, content: string, tags: string[]) {
+    return request<PassageResponse>(`/api/v1/passage/${id}`, {
+      method: 'PUT',
+      headers: {
+        token: auth.token() ?? '',
+      },
+      body: JSON.stringify({
+        content,
+        tags: tags.map((tagName) => ({ tagName })),
+      }),
+    })
+  },
+
+  deletePassage(id: number) {
+    return request<MessageResponse>(`/api/v1/passage/${id}`, {
+      method: 'DELETE',
+      headers: {
+        token: auth.token() ?? '',
+      },
     })
   },
 }

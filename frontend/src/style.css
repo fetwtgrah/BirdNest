@@ -500,6 +500,10 @@ textarea:focus {
   background: #fafbf9;
 }
 
+.editor-footer {
+  flex-wrap: wrap;
+}
+
 .editor-feedback {
   color: #92978f;
   font-size: 12px;
@@ -509,6 +513,108 @@ textarea:focus {
   width: auto;
   min-width: 132px;
   padding: 0 18px;
+}
+
+.cancel-edit-button {
+  min-width: 96px;
+  padding: 0 14px;
+}
+
+.passage-section {
+  margin-top: 64px;
+}
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.section-heading h2 {
+  margin: 6px 0 0;
+  color: var(--ink);
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.passage-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.passage-item {
+  display: flex;
+  min-height: 112px;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 19px 20px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.passage-content {
+  min-width: 0;
+}
+
+.passage-content > p {
+  overflow: hidden;
+  display: -webkit-box;
+  color: #343934;
+  line-height: 1.65;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.passage-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  margin-top: 13px;
+  color: #969c94;
+  font-size: 12px;
+}
+
+.mini-tag {
+  padding: 3px 7px;
+  border-radius: 4px;
+  color: #52705c;
+  background: #f0f5f0;
+}
+
+.passage-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 2px;
+}
+
+.danger-button:hover {
+  color: var(--danger);
+  background: #fbeeed;
+}
+
+.empty-state {
+  padding: 32px 20px;
+  border: 1px dashed #cfd6cd;
+  border-radius: 8px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.55);
+  font-size: 14px;
+  text-align: center;
+}
+
+.spinning {
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @media (max-width: 640px) {
@@ -583,5 +689,22 @@ textarea:focus {
 
   .publish-button {
     width: 100%;
+  }
+
+  .cancel-edit-button {
+    width: 100%;
+  }
+
+  .passage-section {
+    margin-top: 48px;
+  }
+
+  .passage-item {
+    gap: 10px;
+    padding: 16px;
+  }
+
+  .passage-actions {
+    margin-top: -7px;
   }
 }

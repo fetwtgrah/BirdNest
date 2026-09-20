@@ -24,7 +24,7 @@ async function submit() {
     auth.save(result.token)
 
     const redirect =
-      typeof route.query.redirect === 'string' ? route.query.redirect : '/publish'
+      typeof route.query.redirect === 'string' ? route.query.redirect : '/home'
     await router.push(redirect)
   } catch (err) {
     error.value = err instanceof Error ? err.message : '登录失败，请稍后重试'

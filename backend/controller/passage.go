@@ -61,11 +61,20 @@ func AddPassage(c *gin.Context) {
 
 func GetPassage(c *gin.Context) {
 	id := c.Param("id")
+	userID, ok := c.Get("user_id")
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"msg": "用户信息获取失败"})
+		return
+	}
 	var passage model.Passage
-	if err := configs.Db.First(&passage, id).Error; err != nil {
+	if err := configs.Db.Preload("Tags").First(&passage, id).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"msg": "不存在该文章或文章id错误",
 		})
+		return
+	}
+	if passage.UserID != userID.(uint) {
+		c.JSON(http.StatusForbidden, gin.H{"msg": "无权限查看别人的文章"})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
@@ -171,15 +180,19 @@ func DeletePassage(c *gin.Context) {
 
 func GetPassageByTag(c *gin.Context) {
 	tagName := c.Param("tag")
-	var tag model.Tag
-	if err := configs.Db.Where("tag_name=?", tagName).First(&tag).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"msg": "标签不存在",
-		})
+	userID, ok := c.Get("user_id")
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"msg": "用户信息获取失败"})
 		return
 	}
+
 	var passages []model.Passage
-	if err := configs.Db.Model(&tag).Association("Passages").Find(&passages); err != nil {
+	if err := configs.Db.
+		Preload("Tags").
+		Joins("JOIN passage_tags ON passage_tags.passage_id = passages.id").
+		Joins("JOIN tags ON tags.id = passage_tags.tag_id").
+		Where("passages.user_id = ? AND tags.tag_name = ?", userID.(uint), tagName).
+		Find(&passages).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"msg": err.Error(),
 		})

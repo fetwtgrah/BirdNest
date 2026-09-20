@@ -5,7 +5,7 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      redirect: '/publish',
+      redirect: '/home',
     },
     {
       path: '/login',
@@ -18,6 +18,12 @@ const router = createRouter({
       name: 'register',
       component: () => import('../views/RegisterView.vue'),
       meta: { guestOnly: true },
+    },
+    {
+      path: '/home',
+      name: 'home',
+      component: () => import('../views/HomeView.vue'),
+      meta: { requiresAuth: true },
     },
     {
       path: '/publish',
@@ -36,7 +42,7 @@ router.beforeEach((to) => {
   }
 
   if (to.meta.guestOnly && hasToken) {
-    return { name: 'publish' }
+    return { name: 'home' }
   }
 })
 

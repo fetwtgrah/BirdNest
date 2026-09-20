@@ -104,6 +104,22 @@ export const api = {
     })
   },
 
+  getPassage(id: number) {
+    return request<PassageResponse>(`/api/v1/passage/${id}`, {
+      headers: {
+        token: auth.token() ?? '',
+      },
+    })
+  },
+
+  getPassagesByTag(tag: string) {
+    return request<PassageListResponse>(`/api/v1/passage/tag/${encodeURIComponent(tag)}`, {
+      headers: {
+        token: auth.token() ?? '',
+      },
+    })
+  },
+
   updatePassage(id: number, content: string, tags: string[]) {
     return request<PassageResponse>(`/api/v1/passage/${id}`, {
       method: 'PUT',
